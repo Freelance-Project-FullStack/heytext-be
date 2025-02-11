@@ -1,20 +1,12 @@
 const mongoose = require("mongoose");
 
-const guestSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
     },
-    invitedName: {
-      type: String,
-      required: true,
-    },
     phoneNumber: String,
-    numberOfGuests: {
-      type: Number,
-      default: 1,
-    },
     isAttending: {
       type: Boolean,
       default: false,
@@ -34,6 +26,41 @@ const guestSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // Authentication related fields
+    loginMethod: {
+      type: String,
+      enum: ["google", "manual"],
+      required: true, // This ensures we always track the login method
+    },
+    email: {
+      type: String,
+      required: function () {
+        return this.loginMethod !== "google"; // Email is required for manual login
+      },
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: function () {
+        return this.loginMethod === "manual"; // Password is only required for manual login
+      },
+    },
+    googleId: {
+      type: String,
+      required: function () {
+        return this.loginMethod === "google"; // Google ID is required for Google login
+      },
+    },
+    googleEmail: {
+      type: String,
+      required: function () {
+        return this.loginMethod === "google"; // Google Email is required for Google login
+      },
+      unique: true,
+    },
+    googleToken: {
+      type: String, // Token for interacting with Google APIs (optional, based on your requirements)
+    },
   },
   {
     timestamps: true,
@@ -41,4 +68,4 @@ const guestSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Guest", guestSchema);
+module.exports = mongoose.model("User", userSchema);

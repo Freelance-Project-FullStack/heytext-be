@@ -11,6 +11,7 @@ const errorHandler = require("./middleware/errorHandler");
 const usersRouter = require("./routes/users");
 const coursesRouter = require("./routes/courses");
 const fontsRouter = require("./routes/fonts");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -56,6 +57,36 @@ app.use((req, res, next) => {
   res.setHeader("CDN-Cache-Control", "public, s-maxage=7200");
   next();
 });
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const User = require("../models/User");
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://yourdomain.com/auth/google/callback",
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      const { id, email, name } = profile;
+      let user = await User.findOne({ googleId: id });
+
+      if (!user) {
+        user = new User({
+          name,
+          googleId: id,
+          googleEmail: email,
+          googleToken: accessToken,
+          loginMethod: "google",
+        });
+        await user.save();
+      }
+
+      done(null, user);
+    }
+  )
+);
 
 // Tối ưu cho serverless
 mongoose.connect(process.env.MONGODB_URI, {
@@ -83,6 +114,7 @@ mongoose
 app.use("/api/users", usersRouter);
 app.use("/api/courses", coursesRouter);
 app.use("/api/fonts", fontsRouter);
+app.use("/api/auth", authRoutes);
 
 // Health check endpoint
 app.get("/", (req, res) => {
