@@ -4,6 +4,34 @@ const { validationResult } = require("express-validator");
 const passport = require("passport"); // If using passport for Google OAuth
 const User = require("../models/User");
 
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://yourdomain.com/auth/google/callback",
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      const { id, email, name } = profile;
+      let user = await User.findOne({ googleId: id });
+
+      if (!user) {
+        user = new User({
+          name,
+          googleId: id,
+          googleEmail: email,
+          googleToken: accessToken,
+          loginMethod: "google",
+        });
+        await user.save();
+      }
+
+      done(null, user);
+    }
+  )
+);
 // Signup - Manual or Google
 exports.signup = async (req, res) => {
   const {
