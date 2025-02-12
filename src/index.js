@@ -12,6 +12,7 @@ const usersRouter = require("./routes/users");
 const coursesRouter = require("./routes/courses");
 const fontsRouter = require("./routes/fonts");
 const authRoutes = require("./routes/authRoutes");
+const chatbotRoutes = require("./routes/chatbot");
 
 const app = express();
 
@@ -85,6 +86,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/courses", coursesRouter);
 app.use("/api/fonts", fontsRouter);
 app.use("/api/auth", authRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 // Health check endpoint
 app.get("/", (req, res) => {
