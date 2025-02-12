@@ -7,14 +7,10 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     phoneNumber: String,
-    isAttending: {
-      type: Boolean,
-      default: false,
-    },
-    invitationCode: {
+    role: {
       type: String,
-      unique: true,
-      required: true,
+      enum: ["admin", "user"],
+      default: "user",
     },
     message: String,
     status: {
@@ -34,9 +30,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: function () {
-        return this.loginMethod !== "google"; // Email is required for manual login
-      },
+      required: true,
       unique: true,
     },
     password: {
@@ -51,16 +45,13 @@ const userSchema = new mongoose.Schema(
         return this.loginMethod === "google"; // Google ID is required for Google login
       },
     },
-    googleEmail: {
-      type: String,
-      required: function () {
-        return this.loginMethod === "google"; // Google Email is required for Google login
-      },
-      unique: true,
-    },
     googleToken: {
       type: String, // Token for interacting with Google APIs (optional, based on your requirements)
     },
+    avatar: {
+      type: String,
+      required: false
+    }
   },
   {
     timestamps: true,

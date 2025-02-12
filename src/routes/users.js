@@ -1,96 +1,81 @@
 const express = require("express");
-const router = express.Router();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const crypto = require("crypto");
 
-// Get user by invitation code
-router.get("/:code", async (req, res) => {
+const router = express.Router();
+const SECRET_KEY = process.env.JWT_SECRET;
+
+router.post("/signup", async (req, res) => {
   try {
-    const user = await User.findOne({ invitationCode: req.params.code });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const { name, email, password, loginMethod, googleId, googleEmail } = req.body;
+
+    // Kiểm tra nếu tài khoản đã tồn tại
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "Email already exists" });
+
+    // Hash mật khẩu nếu đăng ký bằng manual
+    let hashedPassword = undefined;
+    if (loginMethod === "manual") {
+      if (!password) return res.status(400).json({ message: "Password is required for manual login" });
+      hashedPassword = await bcrypt.hash(password, 10);
     }
-    res.json(user);
+
+    const user = new User({
+      name,
+      email,
+      loginMethod,
+      password: hashedPassword,
+      googleId,
+      googleEmail,
+    });
+
+    const newUser = await user.save();
+    res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Create new user with auto-generated invitation code
-router.post("/", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
-    const invitationCode = crypto.randomBytes(3).toString("hex");
-    const user = new User({
-      ...req.body,
-      invitationCode,
-    });
-    const newUser = await user.save();
-    res.status(201).json(newUser);
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.loginMethod !== "manual") {
+      return res.status(400).json({ message: "Use Google login for this account" });
+    }
+
+    // Kiểm tra mật khẩu
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+    // Tạo JWT token
+    const token = jwt.sign({ userId: user._id, email: user.email }, SECRET_KEY, { expiresIn: "1h" });
+
+    res.json({ message: "Login successful", token, user });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
-// Update user RSVP
-router.put("/:code", async (req, res) => {
-  try {
-    const user = await User.findOne({ invitationCode: req.params.code });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    if (req.body.isAttending !== undefined) {
-      user.isAttending = req.body.isAttending;
-    }
-    if (req.body.phoneNumber) {
-      user.phoneNumber = req.body.phoneNumber;
-    }
-    if (req.body.numberOfUsers) {
-      user.numberOfUsers = req.body.numberOfUsers;
-    }
-    if (req.body.message) {
-      user.message = req.body.message;
-    }
-    user.status = req.body.isAttending === true ? "confirmed" : "declined";
-
-    const updatedUser = await user.save();
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// Get all users with filters (admin only)
 router.get("/", async (req, res) => {
   try {
-    const {
-      invitedBy,
-      isAttending,
-      status,
-      search,
-      sort = "createdAt",
-      order = "desc",
-      page = 1,
-      limit = 10,
-    } = req.query;
+    const { search, status, page = 1, limit = 10 } = req.query;
 
     const query = {};
-
-    if (invitedBy) query.invitedBy = invitedBy;
-    if (isAttending !== undefined) query.isAttending = isAttending === "true";
     if (status) query.status = status;
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
-        { phoneNumber: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
       ];
     }
 
-    const skip = (page - 1) * limit;
-
     const users = await User.find(query)
-      .sort({ [sort]: order === "desc" ? -1 : 1 })
-      .skip(skip)
+      .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
     const total = await User.countDocuments(query);
@@ -108,76 +93,39 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get user statistics
-router.get("/statistics", async (req, res) => {
+router.get("/:userId", async (req, res) => {
   try {
-    const stats = await User.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalUsers: { $sum: 1 },
-          totalConfirmed: {
-            $sum: { $cond: [{ $eq: ["$status", "confirmed"] }, 1, 0] },
-          },
-          totalDeclined: {
-            $sum: { $cond: [{ $eq: ["$status", "declined"] }, 1, 0] },
-          },
-          totalPending: {
-            $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] },
-          },
-          totalAttendees: {
-            $sum: {
-              $cond: [{ $eq: ["$isAttending", true] }, "$numberOfUsers", 0],
-            },
-          },
-          byInvitedBy: {
-            $push: {
-              k: "$invitedBy",
-              v: 1,
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          byInvitedBy: {
-            $arrayToObject: "$byInvitedBy",
-          },
-        },
-      },
-    ]);
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json(
-      stats[0] || {
-        totalUsers: 0,
-        totalConfirmed: 0,
-        totalDeclined: 0,
-        totalPending: 0,
-        totalAttendees: 0,
-        byInvitedBy: {},
-      }
-    );
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Bulk update user table assignments
-router.put("/bulk/table-assignment", async (req, res) => {
+router.put("/:userId", async (req, res) => {
   try {
-    const { assignments } = req.body; // Format: [{userId: '...', table: 1}, ...]
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const updates = assignments.map(({ userId, table }) => ({
-      updateOne: {
-        filter: { _id: userId },
-        update: { $set: { table } },
-      },
-    }));
+    Object.assign(user, req.body);
+    const updatedUser = await user.save();
 
-    await User.bulkWrite(updates);
-    res.json({ message: "Table assignments updated successfully" });
+    res.json(updatedUser);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/:userId", async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.userId);
+    if (!deletedUser) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 

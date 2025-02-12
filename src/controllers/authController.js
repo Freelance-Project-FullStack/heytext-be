@@ -38,7 +38,6 @@ exports.signup = async (req, res) => {
     name,
     email,
     password,
-    invitationCode,
     loginMethod,
     googleId,
     googleEmail,
@@ -64,7 +63,6 @@ exports.signup = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        invitationCode,
         loginMethod,
       });
 

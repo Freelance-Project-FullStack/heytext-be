@@ -3,8 +3,7 @@ const mongoose = require("mongoose");
 const courseSchema = new mongoose.Schema(
   {
     id: {
-      type: Number,
-      required: true,
+      type: Number
     },
     name: {
       type: String,
@@ -22,7 +21,7 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: false, // Image is optional, set this to true if required
     },
-    sender: {
+    auth: {
       type: String,
       required: true,
     },
@@ -30,6 +29,10 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    courseUrl: {
+      type: String,
+      required: false
+    }
   },
   {
     timestamps: true,
