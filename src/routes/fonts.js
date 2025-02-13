@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const Font = require("../models/Font");
 const { body, validationResult } = require("express-validator");
-
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+const Font = require("../models/Font");
+const fontController = require("../controllers/fontController")
 // Create a new Font (Admin only)
 router.post(
   "/create",
@@ -132,5 +134,15 @@ router.post("/increment-usage/:id", async (req, res) => {
     res.status(500).json({ message: "Error updating usage count", error });
   }
 });
+
+router.get('/fonts', fontController.getAllFonts);
+router.post('/fonts', 
+  upload.fields([
+    { name: 'fontFile', maxCount: 1 },
+    { name: 'previewImage', maxCount: 1 }
+  ]),
+  fontController.uploadFont
+);
+
 
 module.exports = router;

@@ -16,6 +16,7 @@ const fontSchema = new mongoose.Schema(
       enum: ["webfont", "desktop", "other"], // Could be extended based on your needs
       required: true,
     },
+    tags: [String],
     description: {
       type: String,
       required: false, // Optional description for the font
