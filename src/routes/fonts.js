@@ -2,9 +2,20 @@ const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});
 const Font = require("../models/Font");
 const fontController = require("../controllers/fontController")
+
+const uploadFields = upload.fields([
+  { name: 'fontFile', maxCount: 1 },
+  { name: 'previewImage', maxCount: 1 }
+]);
+
 // Create a new Font (Admin only)
 router.post(
   "/create",
@@ -136,13 +147,6 @@ router.post("/increment-usage/:id", async (req, res) => {
 });
 
 router.get('/fonts', fontController.getAllFonts);
-router.post('/fonts', 
-  upload.fields([
-    { name: 'fontFile', maxCount: 1 },
-    { name: 'previewImage', maxCount: 1 }
-  ]),
-  fontController.uploadFont
-);
-
+router.post('/fonts', uploadFields, fontController.uploadFont);
 
 module.exports = router;
