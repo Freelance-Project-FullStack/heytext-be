@@ -149,3 +149,30 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Login failed", error });
   }
 };
+
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // req.user đã được set bởi authMiddleware
+    const user = req.user;
+
+    // Thêm các thông tin bổ sung nếu cần
+    const userWithDetails = await User.findById(user._id)
+      .select("-password")
+      .populate("subscription"); // Nếu có reference đến subscription
+
+    res.json({
+      _id: userWithDetails._id,
+      name: userWithDetails.name,
+      email: userWithDetails.email,
+      phone: userWithDetails.phone,
+      role: userWithDetails.role,
+      avatar: userWithDetails.avatar,
+      subscription: userWithDetails.subscription,
+      createdAt: userWithDetails.createdAt,
+      updatedAt: userWithDetails.updatedAt,
+    });
+  } catch (error) {
+    console.error("Get current user error:", error);
+    res.status(500).json({ message: "Lỗi khi lấy thông tin người dùng" });
+  }
+};

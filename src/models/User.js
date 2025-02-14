@@ -26,7 +26,6 @@ const userSchema = new mongoose.Schema(
     loginMethod: {
       type: String,
       enum: ["google", "manual"],
-      required: true, // This ensures we always track the login method
     },
     email: {
       type: String,
@@ -50,8 +49,8 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      required: false
-    }
+      required: false,
+    },
   },
   {
     timestamps: true,
