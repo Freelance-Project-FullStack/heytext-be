@@ -75,6 +75,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get("/me", authMiddleware, userController.getCurrentUser);
 router.get("/profile", authMiddleware, userController.getCurrentUser);
 
 router.get("/", async (req, res) => {
@@ -111,7 +112,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:userId", async (req, res) => {
   try {
-    const { id } = req.params.userId
+    const { id } = req.params.userId;
 
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -124,7 +125,7 @@ router.get("/:userId", async (req, res) => {
 
 router.put("/:userId", async (req, res) => {
   try {
-    const { id } = req.params.userId
+    const { id } = req.params.userId;
 
     const user = await User.findById(id);
 
@@ -141,7 +142,7 @@ router.put("/:userId", async (req, res) => {
 
 router.delete("/:userId", async (req, res) => {
   try {
-    const { id } = req.params.userId
+    const { id } = req.params.userId;
 
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser)
