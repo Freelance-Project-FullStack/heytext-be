@@ -14,13 +14,8 @@ const userSchema = new mongoose.Schema(
     },
     message: String,
     status: {
-      type: String,
-      enum: ["pending", "confirmed", "declined"],
-      default: "pending",
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+      type: Boolean,
+      default: true,
     },
     // Authentication related fields
     loginMethod: {

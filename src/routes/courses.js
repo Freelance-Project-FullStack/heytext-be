@@ -72,7 +72,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name, price, description, image, auth, content, courseUrl } = req.body;
+    const { name, price, description, image, auth, courseUrl, tags } = req.body;
 
     if (!name || !price || !description) {
       return res.status(400).json({ status: "error", message: "All fields are required" });
@@ -84,8 +84,8 @@ router.post("/", async (req, res) => {
       description,
       image,
       auth: "admin",
-      content: "",
-      courseUrl: "",
+      tags,
+      courseUrl,
     });
 
     await newCourse.save();

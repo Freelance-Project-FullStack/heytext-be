@@ -97,12 +97,16 @@ router.get("/", async (req, res) => {
     const total = await User.countDocuments(query);
 
     res.json({
-      users,
-      pagination: {
-        total,
-        page: parseInt(page),
-        pages: Math.ceil(total / limit),
-      },
+      status: "success",
+      message: "Data retrieved successfully",
+      result: {
+        data: users,
+        pagination: {
+          total,
+          page: parseInt(page),
+          pages: Math.ceil(total / limit),
+        },
+      }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

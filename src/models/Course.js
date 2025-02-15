@@ -7,7 +7,7 @@ const courseSchema = new mongoose.Schema(
     description: { type: String, required: true },
     image: { type: String, required: false },
     auth: { type: String, required: false },
-    content: { type: String, required: false },
+    tags: { type: [String], required: false },
     courseUrl: { type: String, required: false }
   },
   {
