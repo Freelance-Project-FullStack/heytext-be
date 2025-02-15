@@ -2,37 +2,13 @@ const mongoose = require("mongoose");
 
 const courseSchema = new mongoose.Schema(
   {
-    id: {
-      type: Number
-    },
-    name: {
-      type: String,
-      required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    image: {
-      type: String,
-      required: false, // Image is optional, set this to true if required
-    },
-    auth: {
-      type: String,
-      required: true,
-    },
-    content: {
-      type: String,
-      required: true,
-    },
-    courseUrl: {
-      type: String,
-      required: false
-    }
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    description: { type: String, required: true },
+    image: { type: String, required: false },
+    auth: { type: String, required: false },
+    content: { type: String, required: false },
+    courseUrl: { type: String, required: false }
   },
   {
     timestamps: true,
