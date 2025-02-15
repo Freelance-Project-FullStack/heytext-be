@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 const passport = require("passport"); // If using passport for Google OAuth
 const User = require("../models/User");
 
@@ -140,7 +141,7 @@ exports.login = async (req, res) => {
             .json({ message: "Google authentication failed", error: err });
         }
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-          expiresIn: "1h",
+          expiresIn: "12h",
         });
         return res.status(200).json({ token, user });
       })(req, res);
@@ -156,9 +157,10 @@ exports.getCurrentUser = async (req, res) => {
     const user = req.user;
 
     // Thêm các thông tin bổ sung nếu cần
-    const userWithDetails = await User.findById(user._id)
-      .select("-password")
-      .populate("subscription"); // Nếu có reference đến subscription
+    const userWithDetails = await User.findById(
+      mongoose.Types.ObjectId(user._id)
+    ); //.select("-password");
+    // .populate("subscription");
 
     res.json({
       _id: userWithDetails._id,
@@ -167,7 +169,7 @@ exports.getCurrentUser = async (req, res) => {
       phone: userWithDetails.phone,
       role: userWithDetails.role,
       avatar: userWithDetails.avatar,
-      subscription: userWithDetails.subscription,
+      // subscription: userWithDetails.subscription,
       createdAt: userWithDetails.createdAt,
       updatedAt: userWithDetails.updatedAt,
     });

@@ -75,6 +75,7 @@ router.post("/login", async (req, res) => {
   }
 });
 router.get("/me", authMiddleware, userController.getCurrentUser);
+router.get("/profile", authMiddleware, userController.getCurrentUser);
 
 router.get("/", async (req, res) => {
   try {

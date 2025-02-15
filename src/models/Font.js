@@ -31,7 +31,6 @@ const fontSchema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Admin", // Referring to the Admin who created the font (if necessary)
     },
     createdAt: {
       type: Date,

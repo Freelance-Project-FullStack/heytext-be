@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      auto: true,
+    },
     name: {
       type: String,
       required: true,
@@ -51,11 +55,23 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    // subscription: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" },
   },
   {
     timestamps: true,
     versionKey: "__v",
   }
 );
+
+// Add compound index for faster queries
+userSchema.index({ email: 1, loginMethod: 1 });
+
+// Add any necessary pre-save middleware
+userSchema.pre("save", function (next) {
+  if (!this._id) {
+    this._id = new mongoose.Types.ObjectId();
+  }
+  next();
+});
 
 module.exports = mongoose.model("User", userSchema);
