@@ -20,23 +20,10 @@ Node.js backend server for the heytext website.
 - PM2 (Process Manager)
 - Nginx (Reverse Proxy)
 
-{
-"name": "ReactJS Masterclass",
-"price": 200,
-"description": "Learn Node.js from scratch with real-world projects",
-"image": "https://example.com/course-image.jpg",
-"auth": "John Doe",
-"content": "This course covers Node.js, Express, MongoDB, and REST API development.",
-"courseUrl": "https://example.com/nodejs-course"
-}
+### doc requirements
 
-{
-"name": "Jane Smith",
-"phoneNumber": "+0987654321",
-"status": "declined",
-"loginMethod": "manual",
-"email": "thinhpq10@fpt.com",
-"password": "12345678",
-"createdAt": "2025-02-12T11:00:00Z",
-"role": "admin"
-}
+https://docs.google.com/document/d/1HMqUBa2FHca3Ep2DjqblV92XmSlaV4KtbTjwzylxXv4/edit?fbclid=IwY2xjawIW5jFleHRuA2FlbQIxMAABHe16--93lbNNpxAyJRDSwK2B-ZPmlQeM8qmK0-Bs03mlUZnVe30Zb2d0SA_aem_A3F7Ez_4OL5f5mxPtFswKw&tab=t.0
+
+### doc design
+
+https://www.figma.com/design/0lHTqfi1j5fITIguKiBcK5/Exxe2?node-id=0-1&p=f&t=dynlSMRghbBZLNfo-0
