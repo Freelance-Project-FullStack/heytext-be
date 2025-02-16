@@ -92,6 +92,7 @@ router.get("/", async (req, res) => {
     }
 
     const users = await User.find(query)
+      .select("-password")
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -129,13 +130,20 @@ router.get("/:userId", async (req, res) => {
 
 router.put("/:userId", async (req, res) => {
   try {
-    const { id } = req.params.userId;
+    const { userId } = req.params;
+    const { role, status } = req.body;
 
-    const user = await User.findById(id);
+    const user = await User.findById(userId);
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    Object.assign(user, req.body);
+    if (role !== undefined) {
+      user.role = role;
+    }
+    if (status !== undefined) {
+      user.status = status;
+    }
+
     const updatedUser = await user.save();
 
     res.json(updatedUser);
