@@ -5,7 +5,6 @@ dotenv.config();
 
 const generateContent = async (userPrompt) => {
     try {
-        console.log("dd")
         if (!process.env.API_KEY || !process.env.API_URL) {
             throw new Error("Missing API_KEY or API_URL in environment variables.");
         }
