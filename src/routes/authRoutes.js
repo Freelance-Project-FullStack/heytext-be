@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
-const { signup, login } = require("../controllers/authController");
+const { signup, login, loginwithGoogle } = require("../controllers/authController");
 
 // Signup route
 router.post(
@@ -28,5 +28,7 @@ router.post(
   ],
   login
 );
+
+router.post("/google", loginwithGoogle);
 
 module.exports = router;

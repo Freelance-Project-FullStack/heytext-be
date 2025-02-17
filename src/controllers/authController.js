@@ -164,3 +164,28 @@ exports.getCurrentUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi lấy thông tin người dùng" });
   }
 };
+
+exports.loginwithGoogle = async (req, res) => {
+  const { name, email, googleid } = req.body;
+
+  try {
+    let user = await User.findOne({ googleid });
+    if (!user) {
+      user = new User({
+        name,
+        email,
+        googleId: googleid,
+        loginMethod: "google",
+      });
+      await user.save();
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.status(200).json({ token, user });
+  } catch (error) {
+    res.status(500).json({ message: "Error during Google login", error });
+  }
+};
