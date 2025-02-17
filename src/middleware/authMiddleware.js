@@ -14,7 +14,6 @@ const authenticate = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("decoded", decoded);
     // Tìm user từ database và loại bỏ password
     const user = await User.findById(decoded.userId).select("-password");
     if (!user) {
