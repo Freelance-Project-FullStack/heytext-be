@@ -7,7 +7,8 @@
     "start": "node src/index.js",
     "start:dev": "nodemon src/index.js",
     "build": "echo 'No build step required'",
-    "start:prod": "NODE_ENV=production node src/index.js"
+    "start:prod": "NODE_ENV=production node src/index.js",
+    "seed": "node src/seeders/fontSeeder.js"
   },
   "dependencies": {
     "axios": "^1.7.9",

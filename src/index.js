@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const path = require("path");
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const dotenv = require("dotenv");
+const morgan = require("morgan");
 require("dotenv").config();
 
 const errorHandler = require("./middleware/errorHandler");
@@ -14,6 +16,7 @@ const fontsRouter = require("./routes/fonts");
 const authRoutes = require("./routes/authRoutes");
 const chatbotRoutes = require("./routes/chatbot");
 const transaction = require("./routes/transactions");
+const fontRoutes = require("./routes/fontRoutes");
 
 const app = express();
 
@@ -41,6 +44,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "https://heytext-fe.vercel.app",
@@ -68,6 +73,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 5000,
 });
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/mock-fonts", express.static(path.join(__dirname, "mock-fonts")));
 
 // Connect to MongoDB
 mongoose
@@ -89,13 +95,31 @@ app.use("/api/fonts", fontsRouter);
 app.use("/api/auth", authRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/transaction", transaction);
+app.use("/api/v1", fontRoutes);
 
 // Health check endpoint
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "Heytext API is running" });
 });
 
-const PORT = process.env.PORT || 5000;
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date() });
+});
+
+app.get("/api-docs", (req, res) => {
+  res.json({
+    version: "1.0",
+    endpoints: {
+      fonts: {
+        get: "/api/v1/fonts",
+        getById: "/api/v1/fonts/:id",
+        create: "/api/v1/fonts",
+        update: "/api/v1/fonts/:id",
+        delete: "/api/v1/fonts/:id",
+      }
+    }
+  });
+});
 
 // Error handling middleware
 app.use(errorHandler);
@@ -114,15 +138,15 @@ process.on("unhandledRejection", (error) => {
 
 // Handle EADDRINUSE error
 const server = app
-  .listen(PORT, "0.0.0.0", () => {
-    console.log(`Server is running on port ${PORT}`);
+  .listen(process.env.PORT || 3000, "0.0.0.0", () => {
+    console.log(`Server is running on port ${process.env.PORT || 3000}`);
     console.log(
-      `Swagger documentation is available at http://localhost:${PORT}/api-docs`
+      `Swagger documentation is available at http://localhost:${process.env.PORT || 3000}/api-docs`
     );
   })
   .on("error", (err) => {
     if (err.code === "EADDRINUSE") {
-      console.error(`Port ${PORT} is already in use. Please try another port.`);
+      console.error(`Port ${process.env.PORT || 3000} is already in use. Please try another port.`);
       process.exit(1);
     } else {
       console.error("Server error:", err);

@@ -5,58 +5,65 @@ const fontSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true, // Ensuring unique names for fonts
+      unique: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
+    styles: {
+      type: [String],
+      default: ["Regular"],
+    },
+    uses: {
+      type: [String],
+      default: [],
+    },
+    price: {
+      type: Number,
+      default: 0,
+    },
+    downloads: {
+      type: Number,
+      default: 0,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    rating: {
+      type: String,
+      default: "0.0",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     fontUrl: {
       type: String,
       required: true,
     },
-    type: {
-      type: String,
-      enum: ["webfont", "desktop", "other"], // Could be extended based on your needs
-      required: true,
-    },
-    tags: [String],
-    description: {
-      type: String,
-      required: false, // Optional description for the font
-    },
-    downloadsCount: {
-      type: Number,
-      default: 0, // Tracks how many times the font has been downloaded
-    },
-    usageCount: {
-      type: Number,
-      default: 0, // Tracks how many times the font has been used
+    tags: {
+      type: [String],
+      default: [],
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now, // Automatically updated when the font is modified
-    },
-    isActive: {
-      type: Boolean,
-      default: true, // To activate or deactivate a font (Admin can manage this)
+      ref: 'User',
+      required: false,
     },
   },
   {
-    timestamps: true, // Ensures automatic tracking of creation and update times
+    timestamps: true,
     versionKey: "__v",
   }
 );
 
-// Create a method to update the updatedAt field whenever a font is updated
-fontSchema.pre("save", function (next) {
-  if (this.isModified()) {
-    this.updatedAt = Date.now();
-  }
-  next();
-});
+// Add index for better search performance
+fontSchema.index({ name: 'text', description: 'text' });
 
 module.exports = mongoose.model("Font", fontSchema);
