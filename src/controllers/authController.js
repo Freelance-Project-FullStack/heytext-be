@@ -69,7 +69,7 @@ exports.signup = async (req, res) => {
 
       await newUser.save();
       const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
+        expiresIn: "24h",
       });
 
       res.status(201).json({ token, user: newUser });
@@ -82,7 +82,7 @@ exports.signup = async (req, res) => {
         const token = jwt.sign(
           { userId: existingUser._id },
           process.env.JWT_SECRET,
-          { expiresIn: "1h" }
+          { expiresIn: "24h" }
         );
         return res.status(200).json({ token, user: existingUser });
       }
@@ -100,7 +100,7 @@ exports.signup = async (req, res) => {
       const token = jwt.sign(
         { userId: newGoogleUser._id },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "24h" }
       );
 
       res.status(201).json({ token, user: newGoogleUser });
@@ -121,13 +121,13 @@ exports.login = async (req, res) => {
         return res.status(400).json({ message: "User not found" });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(400).json({ message: "Invalid credentials" });
       }
 
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
+        expiresIn: "24h",
       });
       return res.status(200).json({ token, user });
     }
@@ -181,7 +181,7 @@ exports.loginwithGoogle = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
 
     res.status(200).json({ token, user });
