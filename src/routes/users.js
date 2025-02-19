@@ -57,6 +57,10 @@ router.post("/login", async (req, res) => {
         .json({ message: "Use Google login for this account" });
     }
 
+    if (user.status === false) {
+      return res.status(400).json({ message: "User is blocked" });
+    }
+
     // Kiểm tra mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)

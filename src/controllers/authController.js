@@ -121,6 +121,10 @@ exports.login = async (req, res) => {
         return res.status(400).json({ message: "User not found" });
       }
 
+      if (user.status === false) {
+        return res.status(400).json({ message: "User is blocked" });
+      }
+
       const isMatch = bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(400).json({ message: "Invalid credentials" });
