@@ -46,6 +46,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    subscription: { type: String, default: "free" }
     // subscription: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" },
   },
   {

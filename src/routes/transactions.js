@@ -1,6 +1,6 @@
 const express = require("express");
 const Transaction = require("../models/Transaction");
-
+const User = require("../models/User")
 function generateTransactionCode(length = 10) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -27,7 +27,7 @@ router.get("/", async (req, res) => {
 
 // 2. Tạo giao dịch mới
 router.post("/", async (req, res) => {
-  const { nguoiDung, goiDangKy, soTien } = req.body;
+  const { nguoiDung, goiDangKy, soTien, packageId } = req.body;
   const transactionCode = generateTransactionCode();
   const newTransaction = new Transaction({
     maGiaoDich: transactionCode,
@@ -35,6 +35,7 @@ router.post("/", async (req, res) => {
     goiDangKy,
     soTien,
     trangThai: "pending",
+    packageId: packageId || "course"
   });
 
   try {
@@ -54,6 +55,12 @@ router.put("/:id", async (req, res) => {
 
     transaction.trangThai = req.body.trangThai || transaction.trangThai;
     const updatedTransaction = await transaction.save();
+    if (transaction.packageId == "Premium") {
+      const userId = transaction.nguoiDung
+      const user = await User.findById(userId);
+      user.subscription = "premium"
+      await user.save();
+    }
     res.json(updatedTransaction);
   } catch (err) {
     res.status(500).json({ message: err.message });
