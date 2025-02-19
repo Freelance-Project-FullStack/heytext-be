@@ -260,6 +260,255 @@ const fontController = {
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
+  },
+
+  // Get font categories
+  getCategories: async (req, res) => {
+    try {
+      const categories = await Font.distinct('category');
+      res.json({ success: true, data: categories });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Get popular fonts
+  getPopularFonts: async (req, res) => {
+    try {
+      const fonts = await Font.find({ isActive: true })
+        .sort({ downloads: -1, views: -1 })
+        .limit(10);
+      res.json({ success: true, data: fonts });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Get recent fonts
+  getRecentFonts: async (req, res) => {
+    try {
+      const fonts = await Font.find({ isActive: true })
+        .sort({ createdAt: -1 })
+        .limit(10);
+      res.json({ success: true, data: fonts });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Search fonts
+  searchFonts: async (req, res) => {
+    try {
+      const { query, category, tags, priceMin, priceMax } = req.query;
+      let searchQuery = { isActive: true };
+
+      if (query) {
+        searchQuery.$or = [
+          { name: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+          { tags: { $in: [new RegExp(query, 'i')] } }
+        ];
+      }
+
+      if (category) {
+        searchQuery.category = category;
+      }
+
+      if (tags) {
+        searchQuery.tags = { $in: tags.split(',') };
+      }
+
+      if (priceMin !== undefined || priceMax !== undefined) {
+        searchQuery.price = {};
+        if (priceMin !== undefined) searchQuery.price.$gte = Number(priceMin);
+        if (priceMax !== undefined) searchQuery.price.$lte = Number(priceMax);
+      }
+
+      const fonts = await Font.find(searchQuery)
+        .sort({ rating: -1, downloads: -1 });
+
+      res.json({ success: true, data: fonts });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Download font file
+  downloadFont: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const font = await Font.findById(id);
+
+      if (!font) {
+        return res.status(404).json({
+          success: false,
+          message: 'Font not found'
+        });
+      }
+
+      // Increment download count
+      font.downloads += 1;
+      await font.save();
+
+      // Send file
+      res.download(font.fontUrl);
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Increment views
+  incrementViews: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const font = await Font.findByIdAndUpdate(
+        id,
+        { $inc: { views: 1 } },
+        { new: true }
+      );
+
+      if (!font) {
+        return res.status(404).json({
+          success: false,
+          message: 'Font not found'
+        });
+      }
+
+      res.json({ success: true, data: font });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Delete font
+  deleteFont: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const font = await Font.findByIdAndDelete(id);
+
+      if (!font) {
+        return res.status(404).json({
+          success: false,
+          message: 'Font not found'
+        });
+      }
+
+      res.json({ success: true, message: 'Font deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Batch delete fonts
+  batchDeleteFonts: async (req, res) => {
+    try {
+      const { ids } = req.body;
+
+      if (!ids || !Array.isArray(ids)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Font IDs array is required'
+        });
+      }
+
+      await Font.deleteMany({ _id: { $in: ids } });
+
+      res.json({ 
+        success: true, 
+        message: `Successfully deleted ${ids.length} fonts` 
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Batch update status
+  batchUpdateStatus: async (req, res) => {
+    try {
+      const { ids, isActive } = req.body;
+
+      if (!ids || !Array.isArray(ids) || isActive === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: 'Font IDs array and status are required'
+        });
+      }
+
+      await Font.updateMany(
+        { _id: { $in: ids } },
+        { $set: { isActive } }
+      );
+
+      res.json({ 
+        success: true, 
+        message: `Successfully updated status for ${ids.length} fonts` 
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Get font statistics overview
+  getFontStats: async (req, res) => {
+    try {
+      const stats = await Font.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalFonts: { $sum: 1 },
+            activeFonts: { 
+              $sum: { $cond: ['$isActive', 1, 0] }
+            },
+            totalDownloads: { $sum: '$downloads' },
+            totalViews: { $sum: '$views' },
+            averageRating: { $avg: { $toDouble: '$rating' } }
+          }
+        }
+      ]);
+
+      res.json({ success: true, data: stats[0] });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Get download statistics
+  getDownloadStats: async (req, res) => {
+    try {
+      const stats = await Font.aggregate([
+        {
+          $group: {
+            _id: '$category',
+            totalDownloads: { $sum: '$downloads' },
+            averageDownloads: { $avg: '$downloads' },
+            fonts: { $push: { name: '$name', downloads: '$downloads' } }
+          }
+        }
+      ]);
+
+      res.json({ success: true, data: stats });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  // Get rating statistics
+  getRatingStats: async (req, res) => {
+    try {
+      const stats = await Font.aggregate([
+        {
+          $group: {
+            _id: '$category',
+            averageRating: { $avg: { $toDouble: '$rating' } },
+            fonts: { $push: { name: '$name', rating: '$rating' } }
+          }
+        }
+      ]);
+
+      res.json({ success: true, data: stats });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 };
 

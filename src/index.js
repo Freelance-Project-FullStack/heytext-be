@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-const dotenv = require("dotenv");
+// const dotenv = require("dotenv");
 const morgan = require("morgan");
 require("dotenv").config();
 
@@ -12,7 +12,7 @@ const errorHandler = require("./middleware/errorHandler");
 
 const usersRouter = require("./routes/users");
 const coursesRouter = require("./routes/courses");
-const fontsRouter = require("./routes/fonts");
+// const fontsRouter = require("./routes/fonts");
 const authRoutes = require("./routes/authRoutes");
 const chatbotRoutes = require("./routes/chatbot");
 const transaction = require("./routes/transactions");
@@ -91,11 +91,11 @@ mongoose
 // Routes
 app.use("/api/users", usersRouter);
 app.use("/api/courses", coursesRouter);
-app.use("/api/fonts", fontsRouter);
+// app.use("/api/fonts", fontsRouter);
 app.use("/api/auth", authRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/transaction", transaction);
-app.use("/api/v1", fontRoutes);
+app.use("/api/fonts", fontRoutes);
 
 // Health check endpoint
 app.get("/", (req, res) => {
