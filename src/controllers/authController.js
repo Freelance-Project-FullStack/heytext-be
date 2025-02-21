@@ -173,7 +173,7 @@ exports.loginwithGoogle = async (req, res) => {
   const { name, email, googleid } = req.body;
 
   try {
-    let user = await User.findOne({ googleid });
+    let user = await User.findOne({ email: email });
     if (!user) {
       user = new User({
         name,
