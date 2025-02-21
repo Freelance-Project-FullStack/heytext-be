@@ -1,6 +1,6 @@
 const express = require("express");
 const Transaction = require("../models/Transaction");
-const User = require("../models/User")
+const User = require("../models/User");
 function generateTransactionCode(length = 10) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -35,7 +35,7 @@ router.post("/", async (req, res) => {
     goiDangKy,
     soTien,
     trangThai: "pending",
-    packageId: packageId || "course"
+    packageId: packageId || "course",
   });
 
   try {
@@ -56,9 +56,9 @@ router.put("/:id", async (req, res) => {
     transaction.trangThai = req.body.trangThai || transaction.trangThai;
     const updatedTransaction = await transaction.save();
     if (transaction.packageId == "Premium") {
-      const userId = transaction.nguoiDung
+      const userId = transaction.nguoiDung;
       const user = await User.findById(userId);
-      user.subscription = "premium"
+      user.subscription = "premium";
       await user.save();
     }
     res.json(updatedTransaction);

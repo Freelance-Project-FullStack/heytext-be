@@ -2,13 +2,13 @@ const express = require("express");
 const router = express.Router();
 const fontController = require("../controllers/fontController");
 const { upload } = require("../middlewares/uploadMiddleware");
-
+const authenticate = require("../middleware/authMiddleware");
 // Public routes
 router.get("/", fontController.getAllFonts);
 router.get("/categories", fontController.getCategories);
 router.get("/popular", fontController.getPopularFonts);
 router.get("/recent", fontController.getRecentFonts);
-router.get("/search", fontController.searchFonts);
+router.get("/search", authenticate, fontController.searchFonts);
 router.get("/:id", fontController.getFontById);
 
 // Download related

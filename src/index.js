@@ -9,7 +9,7 @@ const morgan = require("morgan");
 require("dotenv").config();
 
 const errorHandler = require("./middleware/errorHandler");
-
+// const authenticate = require("./middleware/authMiddleware");
 const usersRouter = require("./routes/users");
 const coursesRouter = require("./routes/courses");
 // const fontsRouter = require("./routes/fonts");
@@ -45,7 +45,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "https://heytext-fe.vercel.app",
@@ -116,8 +116,8 @@ app.get("/api-docs", (req, res) => {
         create: "/api/v1/fonts",
         update: "/api/v1/fonts/:id",
         delete: "/api/v1/fonts/:id",
-      }
-    }
+      },
+    },
   });
 });
 
@@ -141,12 +141,18 @@ const server = app
   .listen(process.env.PORT || 3000, "0.0.0.0", () => {
     console.log(`Server is running on port ${process.env.PORT || 3000}`);
     console.log(
-      `Swagger documentation is available at http://localhost:${process.env.PORT || 3000}/api-docs`
+      `Swagger documentation is available at http://localhost:${
+        process.env.PORT || 3000
+      }/api-docs`
     );
   })
   .on("error", (err) => {
     if (err.code === "EADDRINUSE") {
-      console.error(`Port ${process.env.PORT || 3000} is already in use. Please try another port.`);
+      console.error(
+        `Port ${
+          process.env.PORT || 3000
+        } is already in use. Please try another port.`
+      );
       process.exit(1);
     } else {
       console.error("Server error:", err);

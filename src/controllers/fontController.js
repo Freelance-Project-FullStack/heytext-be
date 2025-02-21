@@ -1,6 +1,7 @@
-const Font = require('../models/Font');
-const { uploadFile } = require('../utils/fileUpload'); // Implement file upload utility
-const path = require('path');
+const Font = require("../models/Font");
+const { uploadFile } = require("../utils/fileUpload"); // Implement file upload utility
+const { logInfo } = require("../utils/logger");
+const path = require("path");
 
 const fontController = {
   // Get all fonts with filters
@@ -8,37 +9,37 @@ const fontController = {
     try {
       const { search, tags, category, sort, isActive } = req.query;
       let query = {};
-      
+
       // Add filters
       if (search) {
         query.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } }
+          { name: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
         ];
       }
       if (tags) {
-        query.tags = { $in: tags.split(',') };
+        query.tags = { $in: tags.split(",") };
       }
       if (category) {
         query.category = category;
       }
       if (isActive !== undefined) {
-        query.isActive = isActive === 'true';
+        query.isActive = isActive === "true";
       }
 
       // Enhanced sorting options
       let sortOption = {};
-      switch(sort) {
-        case 'downloads':
+      switch (sort) {
+        case "downloads":
           sortOption = { downloads: -1 };
           break;
-        case 'views':
+        case "views":
           sortOption = { views: -1 };
           break;
-        case 'rating':
+        case "rating":
           sortOption = { rating: -1 };
           break;
-        case 'price':
+        case "price":
           sortOption = { price: 1 };
           break;
         default:
@@ -46,7 +47,7 @@ const fontController = {
       }
 
       const fonts = await Font.find(query).sort(sortOption);
-      
+
       res.json({ success: true, data: fonts });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -56,52 +57,46 @@ const fontController = {
   // Upload new font
   uploadFont: async (req, res) => {
     try {
-      const {
-        name,
-        description,
-        category,
-        styles,
-        uses,
-        price,
-        tags
-      } = req.body;
-      
+      const { name, description, category, styles, uses, price, tags } =
+        req.body;
+
       // Validate required fields
       if (!name || !description || !category) {
         return res.status(400).json({
           success: false,
-          message: 'Name, description, and category are required'
+          message: "Name, description, and category are required",
         });
       }
 
       if (!req.files || !req.files.fontFile || !req.files.previewImage) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Both font file and preview image are required' 
+        return res.status(400).json({
+          success: false,
+          message: "Both font file and preview image are required",
         });
       }
 
       // Validate font file type
       const fontFile = req.files.fontFile[0];
-      const validFontTypes = ['.ttf', '.otf', '.woff', '.woff2'];
+      const validFontTypes = [".ttf", ".otf", ".woff", ".woff2"];
       const fontExt = path.extname(fontFile.originalname).toLowerCase();
-      
+
       if (!validFontTypes.includes(fontExt)) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid font file type. Supported types: TTF, OTF, WOFF, WOFF2'
+          message:
+            "Invalid font file type. Supported types: TTF, OTF, WOFF, WOFF2",
         });
       }
 
       // Validate preview image type
       const previewFile = req.files.previewImage[0];
-      const validImageTypes = ['.jpg', '.jpeg', '.png', '.gif'];
+      const validImageTypes = [".jpg", ".jpeg", ".png", ".gif"];
       const imageExt = path.extname(previewFile.originalname).toLowerCase();
-      
+
       if (!validImageTypes.includes(imageExt)) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid image file type. Supported types: JPG, PNG, GIF'
+          message: "Invalid image file type. Supported types: JPG, PNG, GIF",
         });
       }
 
@@ -113,8 +108,10 @@ const fontController = {
         name,
         description,
         category,
-        styles: styles ? styles.split(',').map(style => style.trim()) : ['Regular'],
-        uses: uses ? uses.split(',').map(use => use.trim()) : [],
+        styles: styles
+          ? styles.split(",").map((style) => style.trim())
+          : ["Regular"],
+        uses: uses ? uses.split(",").map((use) => use.trim()) : [],
         price: Number(price) || 0,
         downloads: 0,
         views: 0,
@@ -122,13 +119,13 @@ const fontController = {
         isActive: true,
         fontUrl,
         previewImage: previewPath,
-        tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-        createdAt: new Date()
+        tags: tags ? tags.split(",").map((tag) => tag.trim()) : [],
+        createdAt: new Date(),
       });
 
       res.json({ success: true, data: font });
     } catch (error) {
-      console.error('Error uploading font:', error);
+      console.error("Error uploading font:", error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -138,11 +135,11 @@ const fontController = {
     try {
       const { id } = req.params;
       const font = await Font.findById(id);
-      
+
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
@@ -160,11 +157,11 @@ const fontController = {
     try {
       const { id } = req.params;
       const font = await Font.findById(id);
-      
+
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
@@ -183,7 +180,7 @@ const fontController = {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      
+
       // Remove fields that shouldn't be updated directly
       delete updateData.downloads;
       delete updateData.views;
@@ -199,7 +196,7 @@ const fontController = {
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
@@ -222,7 +219,7 @@ const fontController = {
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
@@ -241,7 +238,7 @@ const fontController = {
       if (!rating || rating < 0 || rating > 5) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid rating value'
+          message: "Invalid rating value",
         });
       }
 
@@ -249,7 +246,7 @@ const fontController = {
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
@@ -265,7 +262,7 @@ const fontController = {
   // Get font categories
   getCategories: async (req, res) => {
     try {
-      const categories = await Font.distinct('category');
+      const categories = await Font.distinct("category");
       res.json({ success: true, data: categories });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -299,35 +296,82 @@ const fontController = {
   // Search fonts
   searchFonts: async (req, res) => {
     try {
-      const { query, category, tags, priceMin, priceMax } = req.query;
+      const user = req.user || {};
+      const {
+        search,
+        categories,
+        styles,
+        uses,
+        minDownloads,
+        maxPrice,
+        rating,
+        hideDisabled,
+      } = req.query;
+      // const { subscription } = req.body;
+
       let searchQuery = { isActive: true };
 
-      if (query) {
+      // Search by name, description, or tags
+      if (search) {
         searchQuery.$or = [
-          { name: { $regex: query, $options: 'i' } },
-          { description: { $regex: query, $options: 'i' } },
-          { tags: { $in: [new RegExp(query, 'i')] } }
+          { name: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+          { tags: { $in: [new RegExp(search, "i")] } },
         ];
       }
 
-      if (category) {
-        searchQuery.category = category;
+      // Filter by categories (array)
+      if (categories && Array.isArray(categories)) {
+        searchQuery.category = { $in: categories };
       }
 
-      if (tags) {
-        searchQuery.tags = { $in: tags.split(',') };
+      // Filter by styles (array)
+      if (styles && Array.isArray(styles)) {
+        searchQuery.styles = { $in: styles };
       }
 
-      if (priceMin !== undefined || priceMax !== undefined) {
-        searchQuery.price = {};
-        if (priceMin !== undefined) searchQuery.price.$gte = Number(priceMin);
-        if (priceMax !== undefined) searchQuery.price.$lte = Number(priceMax);
+      // Filter by uses (array)
+      if (uses && Array.isArray(uses)) {
+        searchQuery.uses = { $in: uses };
       }
 
-      const fonts = await Font.find(searchQuery)
-        .sort({ rating: -1, downloads: -1 });
+      // Filter by minimum downloads
+      if (minDownloads !== undefined) {
+        searchQuery.downloads = { $gte: Number(minDownloads) };
+      }
 
-      res.json({ success: true, data: fonts });
+      // Filter by maximum price
+      if (maxPrice !== undefined) {
+        searchQuery.price = { $lte: Number(maxPrice) };
+      }
+
+      // Filter by minimum rating
+      if (rating !== undefined) {
+        searchQuery.rating = { $gte: Number(rating) };
+      }
+
+      // Fetch fonts based on search query
+      const fonts = await Font.find(searchQuery).sort({
+        rating: -1,
+        downloads: -1,
+      });
+
+      // Handle premium font access
+      const results = fonts.map((font) => {
+        const fontObj = font.toObject();
+        if (user.subscription != "premium" && font.price > 0) {
+          fontObj.disabled = true;
+        }
+        return fontObj;
+      });
+
+      // Filter out disabled fonts if hideDisabled is true
+      const finalResults =
+        hideDisabled === "true"
+          ? results.filter((font) => !font.disabled)
+          : results;
+
+      res.json({ success: true, data: finalResults });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -342,7 +386,7 @@ const fontController = {
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
@@ -370,7 +414,7 @@ const fontController = {
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
@@ -389,11 +433,11 @@ const fontController = {
       if (!font) {
         return res.status(404).json({
           success: false,
-          message: 'Font not found'
+          message: "Font not found",
         });
       }
 
-      res.json({ success: true, message: 'Font deleted successfully' });
+      res.json({ success: true, message: "Font deleted successfully" });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -407,15 +451,15 @@ const fontController = {
       if (!ids || !Array.isArray(ids)) {
         return res.status(400).json({
           success: false,
-          message: 'Font IDs array is required'
+          message: "Font IDs array is required",
         });
       }
 
       await Font.deleteMany({ _id: { $in: ids } });
 
-      res.json({ 
-        success: true, 
-        message: `Successfully deleted ${ids.length} fonts` 
+      res.json({
+        success: true,
+        message: `Successfully deleted ${ids.length} fonts`,
       });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -430,18 +474,15 @@ const fontController = {
       if (!ids || !Array.isArray(ids) || isActive === undefined) {
         return res.status(400).json({
           success: false,
-          message: 'Font IDs array and status are required'
+          message: "Font IDs array and status are required",
         });
       }
 
-      await Font.updateMany(
-        { _id: { $in: ids } },
-        { $set: { isActive } }
-      );
+      await Font.updateMany({ _id: { $in: ids } }, { $set: { isActive } });
 
-      res.json({ 
-        success: true, 
-        message: `Successfully updated status for ${ids.length} fonts` 
+      res.json({
+        success: true,
+        message: `Successfully updated status for ${ids.length} fonts`,
       });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -456,14 +497,14 @@ const fontController = {
           $group: {
             _id: null,
             totalFonts: { $sum: 1 },
-            activeFonts: { 
-              $sum: { $cond: ['$isActive', 1, 0] }
+            activeFonts: {
+              $sum: { $cond: ["$isActive", 1, 0] },
             },
-            totalDownloads: { $sum: '$downloads' },
-            totalViews: { $sum: '$views' },
-            averageRating: { $avg: { $toDouble: '$rating' } }
-          }
-        }
+            totalDownloads: { $sum: "$downloads" },
+            totalViews: { $sum: "$views" },
+            averageRating: { $avg: { $toDouble: "$rating" } },
+          },
+        },
       ]);
 
       res.json({ success: true, data: stats[0] });
@@ -478,12 +519,12 @@ const fontController = {
       const stats = await Font.aggregate([
         {
           $group: {
-            _id: '$category',
-            totalDownloads: { $sum: '$downloads' },
-            averageDownloads: { $avg: '$downloads' },
-            fonts: { $push: { name: '$name', downloads: '$downloads' } }
-          }
-        }
+            _id: "$category",
+            totalDownloads: { $sum: "$downloads" },
+            averageDownloads: { $avg: "$downloads" },
+            fonts: { $push: { name: "$name", downloads: "$downloads" } },
+          },
+        },
       ]);
 
       res.json({ success: true, data: stats });
@@ -498,18 +539,18 @@ const fontController = {
       const stats = await Font.aggregate([
         {
           $group: {
-            _id: '$category',
-            averageRating: { $avg: { $toDouble: '$rating' } },
-            fonts: { $push: { name: '$name', rating: '$rating' } }
-          }
-        }
+            _id: "$category",
+            averageRating: { $avg: { $toDouble: "$rating" } },
+            fonts: { $push: { name: "$name", rating: "$rating" } },
+          },
+        },
       ]);
 
       res.json({ success: true, data: stats });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
-  }
+  },
 };
 
-module.exports = fontController; 
+module.exports = fontController;
