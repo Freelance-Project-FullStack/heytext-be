@@ -157,9 +157,7 @@ exports.login = async (req, res) => {
 
 exports.getCurrentUser = async (req, res) => {
   try {
-    // req.user đã được set bởi authMiddleware
     const user = req.user;
-
     const userWithDetails = await User.findById(user._id);
 
     res.json(userWithDetails);
