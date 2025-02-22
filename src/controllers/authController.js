@@ -145,7 +145,7 @@ exports.login = async (req, res) => {
             .json({ message: "Google authentication failed", error: err });
         }
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-          expiresIn: "12h",
+          expiresIn: "24h",
         });
         return res.status(200).json({ token, user });
       })(req, res);
@@ -158,9 +158,10 @@ exports.login = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = req.user;
-    const userWithDetails = await User.findById(user._id);
+    res.json(user);
+    // const userWithDetails = await User.findById(user._id).select("-password");
 
-    res.json(userWithDetails);
+    // res.json(userWithDetails);
   } catch (error) {
     console.error("Get current user error:", error);
     res.status(500).json({ message: "Lỗi khi lấy thông tin người dùng" });
