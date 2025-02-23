@@ -46,24 +46,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "https://heytext-fe.vercel.app",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-// Add security headers
-app.use((req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
-  res.setHeader("X-XSS-Protection", "1; mode=block");
-  res.setHeader("Cache-Control", "public, max-age=3600");
-  res.setHeader("CDN-Cache-Control", "public, s-maxage=7200");
-  next();
-});
+app.use(cors());
 
 // Tối ưu cho serverless
 mongoose.connect(process.env.MONGODB_URI, {
