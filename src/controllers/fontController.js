@@ -1,7 +1,7 @@
 const Font = require("../models/Font");
-const { uploadFile } = require("../utils/fileUpload"); // Implement file upload utility
-const { logInfo } = require("../utils/logger");
+const { uploadImage } = require("../utils/uploadImage");
 const path = require("path");
+const mongoose = require("mongoose");
 
 const fontController = {
   // Get all fonts with filters
@@ -57,8 +57,17 @@ const fontController = {
   // Upload new font
   uploadFont: async (req, res) => {
     try {
-      const { name, description, category, styles, uses, price, tags } =
-        req.body;
+      const {
+        name,
+        description,
+        category,
+        styles,
+        uses,
+        price,
+        tags,
+        fontUrl,
+        previewUrl,
+      } = req.body;
 
       // Validate required fields
       if (!name || !description || !category) {
@@ -68,7 +77,10 @@ const fontController = {
         });
       }
 
-      if (!req.files || !req.files.fontFile || !req.files.previewImage) {
+      if (
+        (!req.files || !req.files.fontFile || !req.files.previewImage) &&
+        !fontUrl
+      ) {
         return res.status(400).json({
           success: false,
           message: "Both font file and preview image are required",
@@ -76,51 +88,59 @@ const fontController = {
       }
 
       // Validate font file type
-      const fontFile = req.files.fontFile[0];
-      const validFontTypes = [".ttf", ".otf", ".woff", ".woff2"];
-      const fontExt = path.extname(fontFile.originalname).toLowerCase();
+      const fontFile = req.files?.fontFile[0];
+      if (fontFile) {
+        const validFontTypes = [".ttf", ".otf", ".woff", ".woff2"];
+        const fontExt = fontFile
+          ? path.extname(fontFile?.originalname).toLowerCase()
+          : "";
 
-      if (!validFontTypes.includes(fontExt)) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Invalid font file type. Supported types: TTF, OTF, WOFF, WOFF2",
-        });
+        if (fontFile && !validFontTypes.includes(fontExt)) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Invalid font file type. Supported types: TTF, OTF, WOFF, WOFF2",
+          });
+        }
       }
 
       // Validate preview image type
-      const previewFile = req.files.previewImage[0];
-      const validImageTypes = [".jpg", ".jpeg", ".png", ".gif"];
-      const imageExt = path.extname(previewFile.originalname).toLowerCase();
+      const previewFile = req.files?.previewImage[0];
+      if (previewFile) {
+        const validImageTypes = [".jpg", ".jpeg", ".png", ".gif"];
+        const imageExt = path.extname(previewFile?.originalname).toLowerCase();
 
-      if (!validImageTypes.includes(imageExt)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid image file type. Supported types: JPG, PNG, GIF",
-        });
+        if (previewFile && !validImageTypes.includes(imageExt)) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid image file type. Supported types: JPG, PNG, GIF",
+          });
+        }
       }
-
       // Upload files
-      const fontUrl = await uploadFile(fontFile);
-      const previewPath = await uploadFile(previewFile);
+      const fontUrlUpload = fontUrl ? fontUrl : await uploadImage(fontFile);
+      const previewPath = previewUrl
+        ? previewUrl
+        : previewFile
+        ? await uploadImage(previewFile)
+        : "";
 
       const font = await Font.create({
         name,
         description,
         category,
-        styles: styles
-          ? styles.split(",").map((style) => style.trim())
-          : ["Regular"],
-        uses: uses ? uses.split(",").map((use) => use.trim()) : [],
+        styles: styles || [],
+        uses: uses || [],
         price: Number(price) || 0,
         downloads: 0,
         views: 0,
         rating: "0.0",
         isActive: true,
-        fontUrl,
+        fontUrl: fontUrlUpload,
         previewImage: previewPath,
-        tags: tags ? tags.split(",").map((tag) => tag.trim()) : [],
+        tags: tags || [],
         createdAt: new Date(),
+        createdBy: new mongoose.Types.ObjectId(require.user?._id),
       });
 
       res.json({ success: true, data: font });

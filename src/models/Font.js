@@ -47,14 +47,16 @@ const fontSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    previewImage: {
+      type: String,
+    },
     tags: {
       type: [String],
       default: [],
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: false,
+      ref: "User",
     },
   },
   {
@@ -64,6 +66,6 @@ const fontSchema = new mongoose.Schema(
 );
 
 // Add index for better search performance
-fontSchema.index({ name: 'text', description: 'text' });
+fontSchema.index({ name: "text", description: "text" });
 
 module.exports = mongoose.model("Font", fontSchema);

@@ -20,7 +20,7 @@ router.post("/:id/rating", fontController.updateRating);
 router.post("/:id/view", fontController.incrementViews);
 
 // Admin routes (should be protected)
-router.post("", upload.single("fontFile"), fontController.uploadFont);
+router.post("", fontController.uploadFont);
 router.put("/:id", upload.single("fontFile"), fontController.updateFont);
 router.delete("/:id", fontController.deleteFont);
 router.patch("/:id/toggle-status", fontController.toggleFontStatus);
